@@ -183,7 +183,7 @@ func main() {
 		if err != nil {
 			// handle error
 		}
-		_, err = ws.Upgrade(conn)
+		_, err = ws.Upgrade(conn, nil)
 		if err != nil {
 			// handle error
 		}
@@ -252,7 +252,7 @@ func main() {
 		log.Fatal(err)
 	}
 	u := ws.Upgrader{
-		OnHeader: func(key, value []byte) (err error) {
+		OnHeader: func(key, value []byte, ctx interface{}) (err error) {
 			log.Printf("non-websocket header: %q=%q", key, value)
 			return
 		},
@@ -263,7 +263,7 @@ func main() {
 			// handle error
 		}
 
-		_, err = u.Upgrade(conn)
+		_, err = u.Upgrade(conn, nil)
 		if err != nil {
 			// handle error
 		}
@@ -306,7 +306,7 @@ func main() {
 	})
 
 	u := ws.Upgrader{
-		OnHost: func(host []byte) error {
+		OnHost: func(host []byte, ctx interface{}) error {
 			if string(host) == "github.com" {
 				return nil
 			}
@@ -317,7 +317,7 @@ func main() {
 				)),
 			)
 		},
-		OnHeader: func(key, value []byte) error {
+		OnHeader: func(key, value []byte, ctx interface{}) error {
 			if string(key) != "Cookie" {
 				return nil
 			}
@@ -334,7 +334,7 @@ func main() {
 				ws.RejectionStatus(400),
 			)
 		},
-		OnBeforeUpgrade: func() (ws.HandshakeHeader, error) {
+		OnBeforeUpgrade: func(ctx interface{}) (ws.HandshakeHeader, error) {
 			return header, nil
 		},
 	}
@@ -343,7 +343,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		_, err = u.Upgrade(conn)
+		_, err = u.Upgrade(conn, nil)
 		if err != nil {
 			log.Printf("upgrade error: %s", err)
 		}
