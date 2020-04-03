@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/gobwas/ws"
+	"github.com/vinhjaxt/ws"
 )
 
 func TestControlHandler(t *testing.T) {

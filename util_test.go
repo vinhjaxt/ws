@@ -138,7 +138,7 @@ func TestUpgradeSlowClient(t *testing.T) {
 			)
 			receivedHeader := http.Header{}
 			u := Upgrader{
-				OnRequest: func(uri []byte) error {
+				OnRequest: func(uri []byte, ctx interface{}) error {
 					if u := string(uri); u != expURI {
 						t.Errorf(
 							"unexpected URI in OnRequest() callback: %q; want %q",
@@ -147,7 +147,7 @@ func TestUpgradeSlowClient(t *testing.T) {
 					}
 					return nil
 				},
-				OnHost: func(host []byte) error {
+				OnHost: func(host []byte, ctx interface{}) error {
 					if h := string(host); h != expHost {
 						t.Errorf(
 							"unexpected host in OnRequest() callback: %q; want %q",
@@ -156,14 +156,14 @@ func TestUpgradeSlowClient(t *testing.T) {
 					}
 					return nil
 				},
-				OnHeader: func(key, value []byte) error {
+				OnHeader: func(key, value []byte, ctx interface{}) error {
 					receivedHeader.Add(string(key), string(value))
 					return nil
 				},
 			}
 			upgrade := make(chan error, 1)
 			go func() {
-				_, err := u.Upgrade(client)
+				_, err := u.Upgrade(client, nil)
 				upgrade <- err
 			}()
 

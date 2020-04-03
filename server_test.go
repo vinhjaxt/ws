@@ -29,9 +29,9 @@ type upgradeCase struct {
 
 	protocol  func(string) bool
 	extension func(httphead.Option) bool
-	onRequest func(u []byte) error
-	onHost    func(h []byte) error
-	onHeader  func(k, v []byte) error
+	onRequest func(u []byte, ctx interface{}) error
+	onHost    func(h []byte, ctx interface{}) error
+	onHeader  func(k, v []byte, ctx interface{}) error
 
 	nonce        []byte
 	removeSecKey bool
@@ -240,9 +240,9 @@ var upgradeCases = []upgradeCase{
 			headerSecVersion:  []string{"13"},
 		}),
 
-		onRequest: func([]byte) error { return nil },
-		onHost:    func([]byte) error { return nil },
-		onHeader:  func(k, v []byte) error { return nil },
+		onRequest: func([]byte, interface{}) error { return nil },
+		onHost:    func([]byte, interface{}) error { return nil },
+		onHeader:  func(k, v []byte, ctx interface{}) error { return nil },
 
 		res: mustMakeErrResponse(400, ErrHandshakeBadUpgrade, nil),
 		err: ErrHandshakeBadUpgrade,
@@ -458,7 +458,7 @@ func TestUpgrader(t *testing.T) {
 			reqBytes := dumpRequest(test.req)
 			conn := bytes.NewBuffer(reqBytes)
 
-			hs, err := u.Upgrade(conn)
+			hs, err := u.Upgrade(conn, nil)
 			if test.err != err {
 
 				t.Errorf("expected error to be '%v', got '%v'", test.err, err)
@@ -553,7 +553,7 @@ func BenchmarkUpgrader(b *testing.B) {
 			b.RunParallel(func(pb *testing.PB) {
 				for pb.Next() {
 					c := conn[atomic.AddInt64(i, 1)-1]
-					u.Upgrade(c)
+					u.Upgrade(c, nil)
 				}
 			})
 		})

@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/gobwas/ws"
+	"github.com/vinhjaxt/ws"
 )
 
 // DebugUpgrader is a wrapper around ws.Upgrader. It tracks I/O of a
@@ -25,7 +25,7 @@ type DebugUpgrader struct {
 }
 
 // Upgrade calls Upgrade() on underlying ws.Upgrader and tracks I/O on conn.
-func (d *DebugUpgrader) Upgrade(conn io.ReadWriter) (hs ws.Handshake, err error) {
+func (d *DebugUpgrader) Upgrade(conn io.ReadWriter, ctx interface{}) (hs ws.Handshake, err error) {
 	var (
 		// Take the Reader and Writer parts from conn to be probably replaced
 		// below.
@@ -64,5 +64,5 @@ func (d *DebugUpgrader) Upgrade(conn io.ReadWriter) (hs ws.Handshake, err error)
 	return d.Upgrader.Upgrade(struct {
 		io.Reader
 		io.Writer
-	}{r, w})
+	}{r, w}, nil)
 }

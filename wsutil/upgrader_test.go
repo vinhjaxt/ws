@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/gobwas/ws"
+	"github.com/vinhjaxt/ws"
 )
 
 func TestDebugUpgrader(t *testing.T) {
@@ -17,7 +17,7 @@ func TestDebugUpgrader(t *testing.T) {
 		req      []byte
 	}{
 		{
-		// Base case.
+			// Base case.
 		},
 		{
 			req: []byte("" +
@@ -68,7 +68,7 @@ func TestDebugUpgrader(t *testing.T) {
 			}{
 				&reqBuf,
 				&resBuf,
-			})
+			}, nil)
 
 			expRes = resBuf.Bytes()
 

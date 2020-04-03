@@ -102,8 +102,8 @@ func UpgradeHTTP(r *http.Request, w http.ResponseWriter) (net.Conn, *bufio.ReadW
 var DefaultUpgrader Upgrader
 
 // Upgrade is like Upgrader{}.Upgrade().
-func Upgrade(conn io.ReadWriter) (Handshake, error) {
-	return DefaultUpgrader.Upgrade(conn)
+func Upgrade(conn io.ReadWriter, ctx interface{}) (Handshake, error) {
+	return DefaultUpgrader.Upgrade(conn, ctx)
 }
 
 // HTTPUpgrader contains options for upgrading connection to websocket from
@@ -308,7 +308,7 @@ type Upgrader struct {
 	// sent with appropriate HTTP error code and body set to error message.
 	//
 	// RejectConnectionError could be used to get more control on response.
-	OnRequest func(uri []byte) error
+	OnRequest func(uri []byte, ctx interface{}) error
 
 	// OnHost is a callback that will be called after "Host" header successful
 	// parsing.
@@ -323,7 +323,7 @@ type Upgrader struct {
 	// sent with appropriate HTTP error code and body set to error message.
 	//
 	// RejectConnectionError could be used to get more control on response.
-	OnHost func(host []byte) error
+	OnHost func(host []byte, ctx interface{}) error
 
 	// OnHeader is a callback that will be called after successful parsing of
 	// header, that is not used during WebSocket handshake procedure. That is,
@@ -336,7 +336,7 @@ type Upgrader struct {
 	// sent with appropriate HTTP error code and body set to error message.
 	//
 	// RejectConnectionError could be used to get more control on response.
-	OnHeader func(key, value []byte) error
+	OnHeader func(key, value []byte, ctx interface{}) error
 
 	// OnBeforeUpgrade is a callback that will be called before sending
 	// successful upgrade response.
@@ -351,7 +351,7 @@ type Upgrader struct {
 	// sent with appropriate HTTP error code and body set to error message.
 	//
 	// RejectConnectionError could be used to get more control on response.
-	OnBeforeUpgrade func() (header HandshakeHeader, err error)
+	OnBeforeUpgrade func(ctx interface{}) (header HandshakeHeader, err error)
 }
 
 // Upgrade zero-copy upgrades connection to WebSocket. It interprets given conn
@@ -363,7 +363,7 @@ type Upgrader struct {
 // malformed and usually connection should be closed.
 // Even when error is non-nil Upgrade will write appropriate response into
 // connection in compliance with RFC.
-func (u Upgrader) Upgrade(conn io.ReadWriter) (hs Handshake, err error) {
+func (u Upgrader) Upgrade(conn io.ReadWriter, ctx interface{}) (hs Handshake, err error) {
 	// headerSeen constants helps to report whether or not some header was seen
 	// during reading request bytes.
 	const (
@@ -440,7 +440,7 @@ func (u Upgrader) Upgrade(conn io.ReadWriter) (hs Handshake, err error) {
 
 	default:
 		if onRequest := u.OnRequest; onRequest != nil {
-			err = onRequest(req.uri)
+			err = onRequest(req.uri, ctx)
 		}
 	}
 	// Start headers read/parse loop.
@@ -471,7 +471,7 @@ func (u Upgrader) Upgrade(conn io.ReadWriter) (hs Handshake, err error) {
 		case headerHostCanonical:
 			headerSeen |= headerSeenHost
 			if onHost := u.OnHost; onHost != nil {
-				err = onHost(v)
+				err = onHost(v, ctx)
 			}
 
 		case headerUpgradeCanonical:
@@ -528,7 +528,7 @@ func (u Upgrader) Upgrade(conn io.ReadWriter) (hs Handshake, err error) {
 
 		default:
 			if onHeader := u.OnHeader; onHeader != nil {
-				err = onHeader(k, v)
+				err = onHeader(k, v, ctx)
 			}
 		}
 	}
@@ -570,7 +570,7 @@ func (u Upgrader) Upgrade(conn io.ReadWriter) (hs Handshake, err error) {
 		}
 
 	case err == nil && u.OnBeforeUpgrade != nil:
-		header[1], err = u.OnBeforeUpgrade()
+		header[1], err = u.OnBeforeUpgrade(ctx)
 	}
 	if err != nil {
 		var code int
